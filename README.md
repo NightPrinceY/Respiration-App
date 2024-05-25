@@ -104,7 +104,7 @@ You can also run this application using Docker. Follow the steps below:
 
 
 The interface
-![alt text](<images\image3.png>)
+![alt text](images\image3.png)
 
 while Uploading
 
