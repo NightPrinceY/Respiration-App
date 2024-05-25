@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respiration Rate Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom right, #2c3e50, #4ca1af);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #ecf0f1;
+        }
+        .container {
+            max-width: 700px;
+            padding: 20px;
+            background-color: rgba(44, 62, 80, 0.9);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border-radius: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: auto;
+            border-radius: 50%;
+        }
+        h1 {
+            color: #ecf0f1;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 18px;
+            cursor: pointer;
+            background: linear-gradient(to right, #8e44ad, #3498db);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            transition: background-color 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn:hover {
+            background: linear-gradient(to right, #3498db, #8e44ad);
+        }
+        #output {
+            margin-top: 20px;
+            text-align: left;
+            color: #ecf0f1;
+        }
+        .output-item {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        #progressContainer {
+            margin-top: 20px;
+            width: 100%;
+            background-color: #34495e;
+            border-radius: 25px;
+            overflow: hidden;
+            display: none;
+        }
+        #progressBar {
+            width: 0;
+            height: 20px;
+            background-color: #8e44ad;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.4s;
+            border-radius: 25px 0 0 25px;
+        }
+        .chart-container {
+            margin-top: 20px;
+            background-color: #1e272e;
+            border-radius: 25px;
+            padding: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        canvas {
+            border-radius: 15px;
+        }
+        .bg-shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        .shape1 {
+            width: 200px;
+            height: 200px;
+            top: -50px;
+            left: -50px;
+        }
+        .shape2 {
+            width: 300px;
+            height: 300px;
+            bottom: -100px;
+            right: -100px;
+        }
+        .shape3 {
+            width: 150px;
+            height: 150px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <img src="kfs.jpg" alt="Breathing Icon" class="logo">
+        <div class="bg-shape shape1"></div>
+        <div class="bg-shape shape2"></div>
+        <div class="bg-shape shape3"></div>
+        <h1>Respiration Rate Analysis</h1>
+        <input type="file" id="fileInput" accept="video/*">
+        <button class="btn" onclick="uploadVideo()">Process Video</button>
+        <div id="progressContainer">
+            <div id="progressBar">0%</div>
+        </div>
+        <div id="output"></div>
+        <div class="chart-container">
+            <canvas id="respirationChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="filteredPeaksChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        function uploadVideo() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a video file first.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process_video', true);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    const progressBar = document.getElementById('progressBar');
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = Math.floor(percentComplete) + '%';
+                }
+            };
+
+            xhr.onloadstart = function() {
+                document.getElementById('progressContainer').style.display = 'block';
+            };
+
+            xhr.onload = function() {
+                document.getElementById('progressContainer').style.display = 'none';
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.error) {
+                        document.getElementById('output').innerText = 'Error: ' + data.error;
+                    } else {
+                        displayOutput(data);
+                    }
+                } else {
+                    document.getElementById('output').innerText = 'An error occurred. Please try again.';
+                }
+            };
+
+            xhr.onerror = function() {
+                document.getElementById('progressContainer').style.display = 'none';
+                document.getElementById('output').innerText = 'An error occurred. Please try again.';
+            };
+
+            xhr.send(formData);
+        }
+
+        function displayOutput(data) {
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <div class="output-item"><strong>Frames per second:</strong> ${data['Frames per second']}</div>
+                <div class="output-item"><strong>Total number of frames:</strong> ${data['Total number of frames']}</div>
+                <div class="output-item"><strong>Respiration Times:</strong> ${data['Respiration Times'].length}</div>
+                <div class="output-item"><strong>Time Length:</strong> ${data['Time Length']} seconds</div>
+                <div class="output-item"><strong>Respiration Rate (RR):</strong> ${data['RR']} breaths per minute</div>
+            `;
+
+            const ctxRespiration = document.getElementById('respirationChart').getContext('2d');
+            const respirationData = {
+                labels: data['Respiration Times'].map((_, index) => `Breath ${index + 1}`),
+                datasets: [{
+                    label: 'Respiration Times (s)',
+                    data: data['Respiration Times'],
+                    backgroundColor: 'rgba(142, 68, 173, 0.2)',
+                    borderColor: 'rgba(142, 68, 173, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            new Chart(ctxRespiration, {
+                type: 'bar',
+                data: respirationData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const ctxFilteredPeaks = document.getElementById('filteredPeaksChart').getContext('2d');
+            const filteredPeaksData = {
+                labels: Array.from({ length: data['Filtered Peaks'].length }, (_, index) => index + 1),
+                datasets: [{
+                    label: 'Filtered Peaks',
+                    data: data['Filtered Peaks'],
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            new Chart(ctxFilteredPeaks, {
+                type: 'line',
+                data: filteredPeaksData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
