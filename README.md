@@ -103,20 +103,19 @@ You can also run this application using Docker. Follow the steps below:
 ##  Interface of The app
 
 
-The interface
- images/image1.png
+## Interface of The App
 
-while Uploading
+### The Interface
+![The Interface](images/image2.png)
 
-![alt text](<images\image5.png>)
+### While Uploading
+![While Uploading](images/image5.png)
 
+### The Results
+![The Results](images/image1.png)
 
-The results
-
-![alt text](<images\image1.png>)
-
-PEAKS
-![alt text](<images\image4.png>)
+### Peaks
+![Peaks](images/image4.png)
 
 
 ## Contributing
