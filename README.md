@@ -104,19 +104,19 @@ You can also run this application using Docker. Follow the steps below:
 
 
 The interface
-![alt text](<Screenshot 2024-05-25 110745.png>)
+![alt text](<images\image3.png>)
 
 while Uploading
 
-![alt text](<Screenshot 2024-05-25 111314.png>)
+![alt text](<images\image5.png>)
 
 
 The results
 
-![alt text](<Screenshot 2024-05-21 200020-1.png>)
+![alt text](<images\image1.png>)
 
 PEAKS
-![alt text](<Screenshot 2024-05-25 111110.png>)
+![alt text](<images\image4.png>)
 
 
 ## Contributing
