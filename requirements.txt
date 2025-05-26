@@ -1,6 +1,7 @@
 Flask==3.0.3
 opencv-python-headless==4.5.3.56
 dlib==19.24.4
-numpy
+numpy<2.0
 scipy
 matplotlib
+gunicorn
